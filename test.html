@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CDN SDK 테스트</title>
+  <!-- 이 부분만 수정해서 CDN 경로 확인 -->
+  <script async src="https://tracker-sdk.pages.dev/sdk.js" data-site-id="test-site"></script>
+</head>
+<body>
+  <h1>Cloudflare CDN SDK 호출 테스트</h1>
+  <div>콘솔에 "✅ SDK 로드 성공"이 출력되면 정상입니다.</div>
+
+  <script>
+    setTimeout(() => {
+      if (window.MyTracker) {
+        console.log("✅ SDK 로드 성공");
+      } else {
+        console.error("❌ SDK 로드 실패 - window.MyTracker 없음");
+      }
+    }, 1000); // 1초 기다린 뒤 확인
+  </script>
+</body>
+</html>
