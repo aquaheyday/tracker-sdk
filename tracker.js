@@ -126,6 +126,13 @@
     sendEvent("purchase_complete", { cart: cartData });
   }
 
+  function trackSearch(keyword) {
+    if (keyword) {
+      sendEvent("search", { keyword });
+    }
+  }
+  
+
   function bindAutoEventButtons() {
     window.addEventListener("DOMContentLoaded", () => {
       const cartBtn = document.querySelector(".tracker-add-to-cart");
@@ -136,6 +143,8 @@
     });
   }
 
+  
+
   window.Tracker = {
     init,
     sendEvent,
@@ -143,6 +152,7 @@
     trackProductView,
     trackAddToCart,
     trackAddToWishlist,
-    trackPurchaseComplete
+    trackPurchaseComplete,
+    trackSearch
   };
 })();
