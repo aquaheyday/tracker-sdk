@@ -1,7 +1,10 @@
 // 공통 페이지 진입
+```
 Tracker.sendEvent("page_view");
+```
 
 // 상품 상세 진입
+```
 Tracker.sendEvent("product_view", {
   product: {
     product_code: "P123",
@@ -16,8 +19,10 @@ Tracker.sendEvent("product_view", {
     product_third_category: "면"
   }
 });
+```
 
 // 장바구니 담기
+```
 Tracker.sendEvent("add_to_cart", {
   cart: {
     items: [...],
@@ -25,13 +30,17 @@ Tracker.sendEvent("add_to_cart", {
     total_price: 57000
   }
 });
+```
 
 // 찜하기
+```
 Tracker.sendEvent("add_to_wishlist", {
   product: { ... }
 });
+```
 
 // 결제 완료
+```
 Tracker.sendEvent("purchase_complete", {
   cart: {
     items: [...],
@@ -39,3 +48,4 @@ Tracker.sendEvent("purchase_complete", {
     total_price: 57000
   }
 });
+```
