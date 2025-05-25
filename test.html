@@ -1,22 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <title>CDN SDK 테스트</title>
-  <!-- 이 부분만 수정해서 CDN 경로 확인 -->
-  <script async src="https://tracker-sdk.pages.dev/sdk.js" data-site-id="test-site"></script>
+  <meta charset="UTF-8">
+  <title>tracker.js 테스트</title>
 </head>
 <body>
-  <h1>Cloudflare CDN SDK 호출 테스트</h1>
-  <div>콘솔에 "✅ SDK 로드 성공"이 출력되면 정상입니다.</div>
+  <h1>🧪 tracker.js 이벤트 전송 테스트</h1>
+
+  <button class="tracker-add-to-cart">🛒 장바구니 담기</button>
+  <button class="tracker-add-to-wishlist">❤️ 찜하기</button>
+
+  <!-- tracker.js 불러오기 -->
+  <script src="https://cdn.xyzentry.com/tracker.js"></script>
 
   <script>
-    setTimeout(() => {
-      if (window.MyTracker) {
-        console.log("✅ SDK 로드 성공");
-      } else {
-        console.error("❌ SDK 로드 실패 - window.MyTracker 없음");
-      }
-    }, 1000); // 1초 기다린 뒤 확인
+    // tracking_key 초기화
+    Tracker.init("TEST_TRACKING_KEY");
+
+    // 상품 정보 설정
+    Tracker.setCurrentProduct({
+      product_code: "P1234",
+      product_name: "테스트 상품",
+      product_price: 25000,
+      product_dc_price: 21000,
+      product_sold_out: false,
+      product_image_url: "https://example.com/item.jpg",
+      brand: "테스트브랜드",
+      product_first_category: "상의",
+      product_second_category: "반팔",
+      product_third_category: "면"
+    });
+
+    // 페이지 진입 시 이벤트 전송
+    Tracker.trackProductView();
   </script>
 </body>
 </html>
