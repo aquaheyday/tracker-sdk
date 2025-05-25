@@ -1,10 +1,11 @@
-// tracker.js - 자동 이벤트 수집 SDK
+// tracker.js - 자동 이벤트 수집 SDK + attribution 지원
 (function () {
   let TRACKING_KEY = null;
   let currentProduct = null;
 
   function init(key) {
     TRACKING_KEY = key;
+    storeAttributionParams();
     bindAutoEventButtons();
   }
 
@@ -52,6 +53,25 @@
     };
   }
 
+  function storeAttributionParams() {
+    const url = new URL(location.href);
+    const saved = {
+      referrer: document.referrer,
+      utm_source: url.searchParams.get("utm_source"),
+      utm_campaign: url.searchParams.get("utm_campaign"),
+      utm_medium: url.searchParams.get("utm_medium")
+    };
+    localStorage.setItem("entry_attribution", JSON.stringify(saved));
+  }
+
+  function getAttribution() {
+    try {
+      return JSON.parse(localStorage.getItem("entry_attribution") || "null");
+    } catch {
+      return null;
+    }
+  }
+
   function sendEvent(eventType, payload = {}) {
     if (!TRACKING_KEY) {
       console.warn("⚠️ Tracker.init(tracking_key) 먼저 호출해야 합니다.");
@@ -69,6 +89,7 @@
         timestamp: new Date().toISOString()
       },
       device_info: getDeviceInfo(),
+      attribution: getAttribution(),
       ...payload
     };
 
