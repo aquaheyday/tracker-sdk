@@ -1,4 +1,4 @@
-// tracker.js - 자동 이벤트 수집 SDK + attribution 지원
+// tracker.js - Entry 이벤트 트래커 SDK
 (function () {
   let TRACKING_KEY = null;
   let currentProduct = null;
@@ -17,15 +17,7 @@
     const key = "anon_id";
     let id = localStorage.getItem(key);
     if (!id) {
-      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-        id = crypto.randomUUID();
-      } else {
-        id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-          const r = Math.random() * 16 | 0;
-          const v = c === 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
-      }
+      id = crypto?.randomUUID?.() || generateUUIDFallback();
       try {
         localStorage.setItem(key, id);
       } catch (e) {
@@ -33,6 +25,14 @@
       }
     }
     return id;
+  }
+
+  function generateUUIDFallback() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   function getDeviceInfo() {
@@ -72,7 +72,7 @@
     }
   }
 
-  function sendEvent(trackingType, options = {}) {
+  function sendEvent(trackingType, data = {}) {
     if (!TRACKING_KEY) {
       console.warn("⚠️ Tracker.init(tracking_key) 먼저 호출해야 합니다.");
       return;
@@ -89,66 +89,66 @@
         timestamp: new Date().toISOString()
       },
       device_info: getDeviceInfo(),
-      attribution: getAttribution()
+      attribution: getAttribution(),
+      ...data
     };
 
-    if (options.products) body.products = options.products;
-    if (options.total_qty != null) body.total_qty = options.total_qty;
-    if (options.total_price != null) body.total_price = options.total_price;
-    if (options.search_keyword) body.search_keyword = options.search_keyword;
-  
-    fetch("https://xyzentry.com/api/v1/tracker", {
+    fetch("https://yourdomain.com/api/v1/tracker", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     }).catch(console.error);
   }
 
-
   function trackProductView() {
-    sendEvent("product_view", { product: currentProduct });
+    if (currentProduct) {
+      sendEvent("product_view", { products: [currentProduct] });
+    }
   }
 
-  function trackAddToCart() {
-    if (!currentProduct) return;
-    sendEvent("add_to_cart", {
-      cart: {
-        items: [{
-          ...currentProduct,
-          product_qty: 1
+  function trackAddToCart(qty = 1) {
+    if (currentProduct) {
+      sendEvent("add_to_cart", {
+        products: [{
+          ...currentProduct
         }],
-        total_qty: 1,
-        total_price: currentProduct.product_dc_price || currentProduct.product_price
-      }
-    });
+        total_qty: qty,
+        total_price: (currentProduct.product_dc_price || currentProduct.product_price) * qty
+      });
+    }
   }
 
   function trackAddToWishlist() {
-    sendEvent("add_to_wishlist", { product: currentProduct });
+    if (currentProduct) {
+      sendEvent("add_to_wishlist", { products: [currentProduct] });
+    }
   }
 
-  function trackPurchaseComplete(cartData) {
-    sendEvent("purchase_complete", { cart: cartData });
+  function trackPurchaseComplete(products, totalQty, totalPrice) {
+    sendEvent("purchase_complete", {
+      products,
+      total_qty: totalQty,
+      total_price: totalPrice
+    });
   }
 
   function trackSearch(keyword) {
     if (keyword) {
-      sendEvent("search", { keyword });
+      sendEvent("search", { search_keyword: keyword });
     }
   }
-  
 
   function bindAutoEventButtons() {
     window.addEventListener("DOMContentLoaded", () => {
-      const cartBtn = document.querySelector(".tracker-add-to-cart");
-      if (cartBtn) cartBtn.addEventListener("click", trackAddToCart);
+      document.querySelectorAll("[data-tracker='add-to-cart']").forEach(btn => {
+        btn.addEventListener("click", () => trackAddToCart());
+      });
 
-      const wishBtn = document.querySelector(".tracker-add-to-wishlist");
-      if (wishBtn) wishBtn.addEventListener("click", trackAddToWishlist);
+      document.querySelectorAll("[data-tracker='add-to-wishlist']").forEach(btn => {
+        btn.addEventListener("click", trackAddToWishlist);
+      });
     });
   }
-
-  
 
   window.Tracker = {
     init,
