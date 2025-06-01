@@ -93,7 +93,7 @@
       ...data
     };
 
-    fetch("https://xyzentry.com/api/v1/tracker", {
+    fetch("http://localhost:8080/api/v1/tracker", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
