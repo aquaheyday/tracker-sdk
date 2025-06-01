@@ -72,7 +72,7 @@
     }
   }
 
-  function sendEvent(eventType, payload = {}) {
+  function sendEvent(trackingType, options = {}) {
     if (!TRACKING_KEY) {
       console.warn("⚠️ Tracker.init(tracking_key) 먼저 호출해야 합니다.");
       return;
@@ -81,7 +81,7 @@
     const body = {
       tracking_key: TRACKING_KEY,
       anon_id: getAnonId(),
-      event_type: eventType,
+      tracking_type: trackingType,
       common: {
         referrer: document.referrer,
         page_url: location.href,
@@ -89,16 +89,21 @@
         timestamp: new Date().toISOString()
       },
       device_info: getDeviceInfo(),
-      attribution: getAttribution(),
-      ...payload
+      attribution: getAttribution()
     };
 
-    fetch("https://xyzentry.com/api/event", {
+    if (options.products) body.products = options.products;
+    if (options.total_qty != null) body.total_qty = options.total_qty;
+    if (options.total_price != null) body.total_price = options.total_price;
+    if (options.search_keyword) body.search_keyword = options.search_keyword;
+  
+    fetch("https://xyzentry.com/api/v1/tracker", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     }).catch(console.error);
   }
+
 
   function trackProductView() {
     sendEvent("product_view", { product: currentProduct });
