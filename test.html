@@ -2,37 +2,75 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>tracker.js 테스트</title>
+  <title>tracker.js 이벤트 테스트</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; line-height: 1.8; }
+    button { margin-right: 1rem; padding: 0.6rem 1rem; font-size: 1rem; }
+    input[type="text"], input[type="number"] { padding: 0.5rem; font-size: 1rem; }
+    section { margin-bottom: 2rem; }
+  </style>
 </head>
 <body>
-  <h1>🧪 tracker.js 이벤트 전송 테스트</h1>
+  <h1>🧪 tracker.js 테스트</h1>
 
-  <button class="tracker-add-to-cart">🛒 장바구니 담기</button>
-  <button class="tracker-add-to-wishlist">❤️ 찜하기</button>
+  <section>
+    <h2>✅ 상품 설정 및 페이지 진입 이벤트</h2>
+    <button onclick="Tracker.trackProductView()">👀 상품 보기</button>
+  </section>
 
-  <!-- tracker.js 불러오기 -->
+  <section>
+    <h2>🛒 장바구니 테스트</h2>
+    <input type="number" id="qty" value="1" min="1" />
+    <button class="tracker-add-to-cart">장바구니 추가</button>
+  </section>
+
+  <section>
+    <h2>❤️ 찜 테스트</h2>
+    <button class="tracker-add-to-wishlist">찜 추가</button>
+  </section>
+
+  <section>
+    <h2>🔎 검색 이벤트</h2>
+    <input type="text" id="searchKeyword" placeholder="검색어 입력" />
+    <button onclick="Tracker.trackSearch(document.getElementById('searchKeyword').value)">검색 전송</button>
+  </section>
+
+  <section>
+    <h2>💸 구매 완료</h2>
+    <button onclick="simulatePurchase()">구매 완료 이벤트</button>
+  </section>
+
   <script src="https://cdn.xyzentry.com/tracker.js"></script>
-
   <script>
-    // tracking_key 초기화
     Tracker.init("TEST_TRACKING_KEY");
 
-    // 상품 정보 설정
-    Tracker.setCurrentProduct({
+    const product = {
       product_code: "P1234",
       product_name: "테스트 상품",
       product_price: 25000,
       product_dc_price: 21000,
       product_sold_out: false,
       product_image_url: "https://example.com/item.jpg",
-      brand: "테스트브랜드",
-      product_first_category: "상의",
-      product_second_category: "반팔",
-      product_third_category: "면"
+      product_brand: "테스트브랜드",
+      product_category_1: "상의",
+      product_category_2: "반팔",
+      product_category_3: "면"
+    };
+
+    Tracker.setCurrentProduct(product);
+    Tracker.trackProductView();
+
+    // 장바구니 버튼에 수량 반영
+    document.querySelector(".tracker-add-to-cart").addEventListener("click", () => {
+      const qty = parseInt(document.getElementById("qty").value) || 1;
+      Tracker.trackAddToCart(qty);
     });
 
-    // 페이지 진입 시 이벤트 전송
-    Tracker.trackProductView();
+    function simulatePurchase() {
+      const totalQty = 3;
+      const totalPrice = product.product_dc_price * totalQty;
+      Tracker.trackPurchaseComplete([product], totalQty, totalPrice);
+    }
   </script>
 </body>
 </html>
