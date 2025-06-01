@@ -42,7 +42,7 @@
 
   <script src="https://cdn.xyzentry.com/tracker.js"></script>
   <script>
-    Tracker.init("TEST_TRACKING_KEY");
+    Tracker.init("8870713c-856b-4ebc-afcd-cc8038218daa");
 
     const product = {
       product_code: "P1234",
@@ -72,20 +72,5 @@
       Tracker.trackPurchaseComplete([product], totalQty, totalPrice);
     }
   </script>
-
-  <script>
-  // tracker.js가 로드된 후 강제로 fetch를 감싸서 URL 바꿈
-  const originalSendEvent = Tracker.sendEvent;
-  Tracker.sendEvent = function(eventType, payload = {}) {
-    const originalFetch = window.fetch;
-    window.fetch = function(url, options) {
-      if (url.includes("https://xyzentry.com/api/v1/tracker")) {
-        url = "http://localhost:8080/api/v1/tracker"; // 🔁 로컬 테스트 주소
-      }
-      return originalFetch(url, options);
-    };
-    originalSendEvent(eventType, payload);
-  };
-</script>
 </body>
 </html>
