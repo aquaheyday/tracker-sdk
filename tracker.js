@@ -1,16 +1,11 @@
 // tracker.js - Entry 이벤트 트래커 SDK
 (function () {
   let TRACKING_KEY = null;
-  let currentProduct = null;
 
   function init(key) {
     TRACKING_KEY = key;
     storeAttributionParams();
     bindAutoEventButtons();
-  }
-
-  function setCurrentProduct(product) {
-    currentProduct = product;
   }
 
   function getAnonId() {
@@ -100,36 +95,32 @@
     }).catch(console.error);
   }
 
-  function trackProductView() {
-    if (currentProduct) {
-      sendEvent("product_view", { products: [currentProduct] });
-    }
+  // 복수 상품 지원 함수들
+  function normalizeProducts(input) {
+    if (!input) return [];
+    return Array.isArray(input) ? input : [input];
   }
 
-  function trackAddToCart(qty = 1) {
-    if (currentProduct) {
-      sendEvent("add_to_cart", {
-        products: [{
-          ...currentProduct
-        }],
-        total_qty: qty,
-        total_price: (currentProduct.product_dc_price || currentProduct.product_price) * qty
-      });
-    }
+  function trackProductView(products) {
+    const list = normalizeProducts(products);
+    sendEvent("product_view", { products: list });
   }
 
-  function trackAddToWishlist() {
-    if (currentProduct) {
-      sendEvent("add_to_wishlist", { products: [currentProduct] });
-    }
+  function trackAddToCart(products, qty = 1) {
+    const list = normalizeProducts(products);
+    const totalQty = qty * list.length;
+    const totalPrice = list.reduce((sum, p) => sum + ((p.product_dc_price || p.product_price) || 0) * qty, 0);
+    sendEvent("add_to_cart", { products: list, total_qty: totalQty, total_price: totalPrice });
+  }
+
+  function trackAddToWishlist(products) {
+    const list = normalizeProducts(products);
+    sendEvent("add_to_wishlist", { products: list });
   }
 
   function trackPurchaseComplete(products, totalQty, totalPrice) {
-    sendEvent("purchase_complete", {
-      products,
-      total_qty: totalQty,
-      total_price: totalPrice
-    });
+    const list = normalizeProducts(products);
+    sendEvent("purchase_complete", { products: list, total_qty: totalQty, total_price: totalPrice });
   }
 
   function trackSearch(keyword) {
@@ -141,11 +132,19 @@
   function bindAutoEventButtons() {
     window.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll("[data-tracker='add-to-cart']").forEach(btn => {
-        btn.addEventListener("click", () => trackAddToCart());
+        btn.addEventListener("click", () => {
+          const raw = btn.getAttribute('data-products');
+          const products = raw ? JSON.parse(raw) : null;
+          const qty = parseInt(btn.getAttribute('data-qty')) || 1;
+          trackAddToCart(products, qty);
+        });
       });
-
       document.querySelectorAll("[data-tracker='add-to-wishlist']").forEach(btn => {
-        btn.addEventListener("click", trackAddToWishlist);
+        btn.addEventListener("click", () => {
+          const raw = btn.getAttribute('data-products');
+          const products = raw ? JSON.parse(raw) : null;
+          trackAddToWishlist(products);
+        });
       });
     });
   }
@@ -153,7 +152,6 @@
   window.Tracker = {
     init,
     sendEvent,
-    setCurrentProduct,
     trackProductView,
     trackAddToCart,
     trackAddToWishlist,
