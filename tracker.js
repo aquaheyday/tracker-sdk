@@ -101,19 +101,19 @@
     return Array.isArray(input) ? input : [input];
   }
 
-  function trackProductView(products) {
+  function productView(products) {
     const list = normalizeProducts(products);
     sendEvent("product_view", { products: list });
   }
 
-  function trackAddToCart(products, qty = 1) {
+  function addToCart(products, qty = 1) {
     const list = normalizeProducts(products);
     const totalQty = qty * list.length;
     const totalPrice = list.reduce((sum, p) => sum + ((p.product_dc_price || p.product_price) || 0) * qty, 0);
     sendEvent("add_to_cart", { products: list, total_qty: totalQty, total_price: totalPrice });
   }
 
-  function trackAddToWishlist(products) {
+  function addToWish(products) {
     const list = normalizeProducts(products);
     sendEvent("add_to_wishlist", { products: list });
   }
@@ -136,14 +136,14 @@
           const raw = btn.getAttribute('data-products');
           const products = raw ? JSON.parse(raw) : null;
           const qty = parseInt(btn.getAttribute('data-qty')) || 1;
-          trackAddToCart(products, qty);
+          addToCart(products, qty);
         });
       });
       document.querySelectorAll("[data-tracker='add-to-wishlist']").forEach(btn => {
         btn.addEventListener("click", () => {
           const raw = btn.getAttribute('data-products');
           const products = raw ? JSON.parse(raw) : null;
-          trackAddToWishlist(products);
+          addToWish(products);
         });
       });
     });
@@ -152,9 +152,9 @@
   window.Tracker = {
     init,
     sendEvent,
-    trackProductView,
-    trackAddToCart,
-    trackAddToWishlist,
+    productView,
+    addToCart,
+    addToWish,
     trackPurchaseComplete,
     trackSearch
   };
