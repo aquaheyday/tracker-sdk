@@ -17,11 +17,11 @@
       const resp = await fetch("https://tracker.xyzentry.com/v1/uuid", {
         credentials: "include"
       });
-      if (resp.ok) {
+      if (resp.status === 201 || resp.status === 200) {
         const { uuid } = await resp.json();
-        if (uuid) {
-          USER_UUID = uuid;
-        }
+        if (uuid) USER_UUID = uuid;
+      } else {
+        console.warn("⚠️ UUID sync unexpected status:", resp.status);
       }
     } catch (e) {
       console.warn("⚠️ UUID fetch 실패", e);
