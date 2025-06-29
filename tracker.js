@@ -3,15 +3,20 @@
   let TRACKING_KEY = null;
   let ANON_KEY = "anon_id";
   let USER_UUID = null;
-
+  
   async function init(key) {
     TRACKING_KEY = key;
-    await syncUserUuid();        // 트래커 도메인 쿠키 동기화
-    storeAnonId();               // localStorage에 anon_id 저장
+
+    const stored = localStorage.getItem(ANON_KEY);
+    if (!stored) {
+      await syncUserUuid();
+    }
+  
+    storeAnonId();
     storeAttributionParams();
     bindAutoEventButtons();
   }
-
+  
   async function syncUserUuid() {
     try {
       const resp = await fetch("https://tracker.xyzentry.com/v1/uuid", {
@@ -28,6 +33,7 @@
     }
   }
 
+  
   function getAnonId() {
     let id = localStorage.getItem(ANON_KEY);
     if (!id) {
