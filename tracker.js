@@ -1,25 +1,47 @@
 // tracker.js - Entry 이벤트 트래커 SDK
 (function () {
   let TRACKING_KEY = null;
+  let ANON_KEY = "anon_id";
+  let USER_UUID = null;
 
-  function init(key) {
+  async function init(key) {
     TRACKING_KEY = key;
+    await syncUserUuid();        // 트래커 도메인 쿠키 동기화
+    storeAnonId();               // localStorage에 anon_id 저장
     storeAttributionParams();
     bindAutoEventButtons();
   }
 
-  function getAnonId() {
-    const key = "anon_id";
-    let id = localStorage.getItem(key);
-    if (!id) {
-      id = crypto?.randomUUID?.() || generateUUIDFallback();
-      try {
-        localStorage.setItem(key, id);
-      } catch (e) {
-        console.warn("❗ anon_id 저장 실패", e);
+  async function syncUserUuid() {
+    try {
+      const resp = await fetch("https://tracker.xyzentry.com/v1/uuid", {
+        credentials: "include"
+      });
+      if (resp.ok) {
+        const { uuid } = await resp.json();
+        if (uuid) {
+          USER_UUID = uuid;
+        }
       }
+    } catch (e) {
+      console.warn("⚠️ UUID fetch 실패", e);
+    }
+  }
+
+  function getAnonId() {
+    let id = localStorage.getItem(ANON_KEY);
+    if (!id) {
+      id = USER_UUID || crypto?.randomUUID?.() || generateUUIDFallback();
     }
     return id;
+  }
+  function storeAnonId() {
+    const id = getAnonId();
+    try {
+      localStorage.setItem(ANON_KEY, id);
+    } catch (e) {
+      console.warn("❗ anon_id 저장 실패", e);
+    }
   }
 
   function generateUUIDFallback() {
@@ -72,7 +94,6 @@
       console.warn("⚠️ Tracker.init(tracking_key) 먼저 호출해야 합니다.");
       return;
     }
-
     const body = {
       tracking_key: TRACKING_KEY,
       anon_id: getAnonId(),
@@ -87,7 +108,6 @@
       attribution: getAttribution(),
       ...data
     };
-
     fetch("https://tracker.xyzentry.com/v1/collect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,38 +115,33 @@
     }).catch(console.error);
   }
 
-  // 복수 상품 지원 함수들
   function normalizeProducts(input) {
     if (!input) return [];
     return Array.isArray(input) ? input : [input];
   }
 
   function productView(products) {
-    const list = normalizeProducts(products);
-    sendEvent("product_view", { products: list });
+    sendEvent("product_view", { products: normalizeProducts(products) });
   }
-
   function addToCart(products, qty = 1) {
     const list = normalizeProducts(products);
     const totalQty = qty * list.length;
-    const totalPrice = list.reduce((sum, p) => sum + ((p.product_dc_price || p.product_price) || 0) * qty, 0);
+    const totalPrice = list.reduce((sum, p) =>
+      sum + ((p.product_dc_price || p.product_price) || 0) * qty, 0);
     sendEvent("add_to_cart", { products: list, total_qty: totalQty, total_price: totalPrice });
   }
-
   function addToWish(products) {
-    const list = normalizeProducts(products);
-    sendEvent("add_to_wishlist", { products: list });
+    sendEvent("add_to_wishlist", { products: normalizeProducts(products) });
   }
-
   function trackPurchaseComplete(products, totalQty, totalPrice) {
-    const list = normalizeProducts(products);
-    sendEvent("purchase_complete", { products: list, total_qty: totalQty, total_price: totalPrice });
+    sendEvent("purchase_complete", {
+      products: normalizeProducts(products),
+      total_qty: totalQty,
+      total_price: totalPrice
+    });
   }
-
   function trackSearch(keyword) {
-    if (keyword) {
-      sendEvent("search", { search_keyword: keyword });
-    }
+    if (keyword) sendEvent("search", { search_keyword: keyword });
   }
 
   function bindAutoEventButtons() {
@@ -134,21 +149,19 @@
       document.querySelectorAll("[data-tracker='add-to-cart']").forEach(btn => {
         btn.addEventListener("click", () => {
           const raw = btn.getAttribute('data-products');
-          const products = raw ? JSON.parse(raw) : null;
-          const qty = parseInt(btn.getAttribute('data-qty')) || 1;
-          addToCart(products, qty);
+          addToCart(raw ? JSON.parse(raw) : null, parseInt(btn.getAttribute('data-qty')) || 1);
         });
       });
       document.querySelectorAll("[data-tracker='add-to-wishlist']").forEach(btn => {
         btn.addEventListener("click", () => {
           const raw = btn.getAttribute('data-products');
-          const products = raw ? JSON.parse(raw) : null;
-          addToWish(products);
+          addToWish(raw ? JSON.parse(raw) : null);
         });
       });
     });
   }
 
+  // 전역 노출
   window.Tracker = {
     init,
     sendEvent,
