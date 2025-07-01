@@ -33,7 +33,12 @@
     }
   }
 
-  
+  function getPageLanguage() {
+    return document.documentElement.getAttribute('lang')
+      || navigator.language
+      || 'und';
+  }
+
   function getAnonId() {
     let id = localStorage.getItem(ANON_KEY);
     if (!id) {
@@ -108,6 +113,7 @@
         referrer: document.referrer,
         page_url: location.href,
         page_path: location.pathname,
+        page_language: getPageLanguage(),
         timestamp: new Date().toISOString()
       },
       device_info: getDeviceInfo(),
