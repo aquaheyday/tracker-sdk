@@ -1,25 +1,58 @@
 // tracker.js - Entry 이벤트 트래커 SDK
 (function () {
   let TRACKING_KEY = null;
-
-  function init(key) {
+  let ANON_KEY = "anon_id";
+  let USER_UUID = null;
+  
+  async function init(key) {
     TRACKING_KEY = key;
+
+    const stored = localStorage.getItem(ANON_KEY);
+    if (!stored) {
+      await syncUserUuid();
+    }
+  
+    storeAnonId();
     storeAttributionParams();
     bindAutoEventButtons();
   }
+  
+  async function syncUserUuid() {
+    try {
+      const resp = await fetch("http://tracker.xyzentry.com/v1/uuid", {
+        credentials: "include"
+      });
+      if (resp.status === 201 || resp.status === 200) {
+        const { uuid } = await resp.json();
+        if (uuid) USER_UUID = uuid;
+      } else {
+        console.warn("⚠️ UUID sync unexpected status:", resp.status);
+      }
+    } catch (e) {
+      console.warn("⚠️ UUID fetch 실패", e);
+    }
+  }
+
+  function getPageLanguage() {
+    return document.documentElement.getAttribute('lang')
+      || navigator.language
+      || 'und';
+  }
 
   function getAnonId() {
-    const key = "anon_id";
-    let id = localStorage.getItem(key);
+    let id = localStorage.getItem(ANON_KEY);
     if (!id) {
-      id = crypto?.randomUUID?.() || generateUUIDFallback();
-      try {
-        localStorage.setItem(key, id);
-      } catch (e) {
-        console.warn("❗ anon_id 저장 실패", e);
-      }
+      id = USER_UUID || crypto?.randomUUID?.() || generateUUIDFallback();
     }
     return id;
+  }
+  function storeAnonId() {
+    const id = getAnonId();
+    try {
+      localStorage.setItem(ANON_KEY, id);
+    } catch (e) {
+      console.warn("❗ anon_id 저장 실패", e);
+    }
   }
 
   function generateUUIDFallback() {
@@ -72,7 +105,6 @@
       console.warn("⚠️ Tracker.init(tracking_key) 먼저 호출해야 합니다.");
       return;
     }
-
     const body = {
       tracking_key: TRACKING_KEY,
       anon_id: getAnonId(),
@@ -81,13 +113,13 @@
         referrer: document.referrer,
         page_url: location.href,
         page_path: location.pathname,
+        page_language: getPageLanguage(),
         timestamp: new Date().toISOString()
       },
       device_info: getDeviceInfo(),
       attribution: getAttribution(),
       ...data
     };
-
     fetch("http://tracker.xyzentry.com/v1/collect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,38 +127,33 @@
     }).catch(console.error);
   }
 
-  // 복수 상품 지원 함수들
   function normalizeProducts(input) {
     if (!input) return [];
     return Array.isArray(input) ? input : [input];
   }
 
-  function trackProductView(products) {
-    const list = normalizeProducts(products);
-    sendEvent("product_view", { products: list });
+  function productView(products) {
+    sendEvent("product_view", { products: normalizeProducts(products) });
   }
-
-  function trackAddToCart(products, qty = 1) {
+  function addToCart(products, qty = 1) {
     const list = normalizeProducts(products);
     const totalQty = qty * list.length;
-    const totalPrice = list.reduce((sum, p) => sum + ((p.product_dc_price || p.product_price) || 0) * qty, 0);
+    const totalPrice = list.reduce((sum, p) =>
+      sum + ((p.product_dc_price || p.product_price) || 0) * qty, 0);
     sendEvent("add_to_cart", { products: list, total_qty: totalQty, total_price: totalPrice });
   }
-
-  function trackAddToWishlist(products) {
-    const list = normalizeProducts(products);
-    sendEvent("add_to_wishlist", { products: list });
+  function addToWish(products) {
+    sendEvent("add_to_wishlist", { products: normalizeProducts(products) });
   }
-
   function trackPurchaseComplete(products, totalQty, totalPrice) {
-    const list = normalizeProducts(products);
-    sendEvent("purchase_complete", { products: list, total_qty: totalQty, total_price: totalPrice });
+    sendEvent("purchase_complete", {
+      products: normalizeProducts(products),
+      total_qty: totalQty,
+      total_price: totalPrice
+    });
   }
-
   function trackSearch(keyword) {
-    if (keyword) {
-      sendEvent("search", { search_keyword: keyword });
-    }
+    if (keyword) sendEvent("search", { search_keyword: keyword });
   }
 
   function bindAutoEventButtons() {
@@ -134,27 +161,25 @@
       document.querySelectorAll("[data-tracker='add-to-cart']").forEach(btn => {
         btn.addEventListener("click", () => {
           const raw = btn.getAttribute('data-products');
-          const products = raw ? JSON.parse(raw) : null;
-          const qty = parseInt(btn.getAttribute('data-qty')) || 1;
-          trackAddToCart(products, qty);
+          addToCart(raw ? JSON.parse(raw) : null, parseInt(btn.getAttribute('data-qty')) || 1);
         });
       });
       document.querySelectorAll("[data-tracker='add-to-wishlist']").forEach(btn => {
         btn.addEventListener("click", () => {
           const raw = btn.getAttribute('data-products');
-          const products = raw ? JSON.parse(raw) : null;
-          trackAddToWishlist(products);
+          addToWish(raw ? JSON.parse(raw) : null);
         });
       });
     });
   }
 
+  // 전역 노출
   window.Tracker = {
     init,
     sendEvent,
-    trackProductView,
-    trackAddToCart,
-    trackAddToWishlist,
+    productView,
+    addToCart,
+    addToWish,
     trackPurchaseComplete,
     trackSearch
   };
