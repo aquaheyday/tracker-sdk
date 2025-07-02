@@ -113,6 +113,8 @@
         referrer: document.referrer,
         page_url: location.href,
         page_path: location.pathname,
+        site_domain: window.location.hostname,
+        protocol: window.location.protocol,
         page_language: getPageLanguage(),
         timestamp: new Date().toISOString()
       },
