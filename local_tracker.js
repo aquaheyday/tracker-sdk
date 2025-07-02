@@ -114,6 +114,8 @@
         page_url: location.href,
         page_path: location.pathname,
         page_language: getPageLanguage(),
+        site_domain: window.location.hostname,
+        protocol: window.location.protocol,
         timestamp: new Date().toISOString()
       },
       device_info: getDeviceInfo(),
