@@ -112,9 +112,9 @@
 
       listEl.innerHTML = '<ul>' + items.map(item => `
         <li>
-          <a href="/products/${item.product_code}">
+          <!--<a href="/products/${item.product_code}">
             <img src="${item.common_protocol}://${item.common_site_domain}${item.product_image_url}" alt="${item.product_name}">
-          </a>
+          </a>-->
           <div class="info">
             <a class="name" href="/products/${item.product_code}">
               ${item.product_name}
