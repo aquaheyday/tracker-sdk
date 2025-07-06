@@ -15,18 +15,18 @@
 
   <section>
     <h2>✅ 상품 설정 및 페이지 진입 이벤트</h2>
-    <button onclick="Tracker.trackProductView(products)">👀 상품 보기 (멀티 적용)</button>
+    <button onclick="Tracker.productView(products)">👀 상품 보기 (멀티 적용)</button>
   </section>
 
   <section>
     <h2>🛒 장바구니 테스트</h2>
     <input type="number" id="qty" value="1" min="1" />
-    <button onclick="Tracker.trackAddToCart(products, parseInt(document.getElementById('qty').value) || 1)">장바구니 추가</button>
+    <button onclick="Tracker.addToCart(products, parseInt(document.getElementById('qty').value) || 1)">장바구니 추가</button>
   </section>
 
   <section>
     <h2>❤️ 찜 테스트</h2>
-    <button onclick="Tracker.trackAddToWishlist(products)">찜 추가</button>
+    <button onclick="Tracker.addToWishlist(products)">찜 추가</button>
   </section>
 
   <section>
@@ -81,7 +81,7 @@
     ];
 
     // 초기 페이지 뷰: 모든 상품 뷰 트래킹
-    Tracker.trackProductView(products);
+    Tracker.productView(products);
 
     function simulatePurchase() {
       // 상품 개수와 총 가격 계산
