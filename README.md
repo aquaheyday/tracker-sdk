@@ -26,23 +26,27 @@ Tracker.trackPageView();
 
 ✅ 상품 상세 페이지 진입
 ```
-Tracker.trackProductView({
+Tracker.productView({
   product_code: "P123",
   product_name: "Red T-Shirt",
   product_price: 19000,
   product_dc_price: 15000,
   product_sold_out: false,
   product_image_url: "https://example.com/red.jpg",
-  brand: "MyBrand",
-  product_first_category: "상의",
-  product_second_category: "반팔",
-  product_third_category: "면"
+  product_brand: "MyBrand",
+  product_category_1_code: "100",
+  product_category_1_name: "상의",
+  product_category_2_code: "110",
+  product_category_2_name: "반팔",
+  product_category_3_code: "111",
+  product_category_3_name: "면",
+  product_url: "https://example.com/view/P123
 });
 ```
 
 ✅ 장바구니 담기
 ```
-Tracker.trackAddToCart({
+Tracker.addToCart({
   items: [
     {
       product_code: "P123",
@@ -52,10 +56,14 @@ Tracker.trackAddToCart({
       product_sold_out: false,
       product_image_url: "https://example.com/red.jpg",
       product_qty: 2,
-      brand: "MyBrand",
-      product_first_category: "상의",
-      product_second_category: "반팔",
-      product_third_category: "면"
+      product_brand: "MyBrand",
+      product_category_1_code: "100",
+      product_category_1_name: "상의",
+      product_category_2_code: "110",
+      product_category_2_name: "반팔",
+      product_category_3_code: "111",
+      product_category_3_name: "면",
+      product_url: "https://example.com/view/P123
     }
   ],
   total_qty: 2,
@@ -65,23 +73,28 @@ Tracker.trackAddToCart({
 
 ✅ 찜하기 (Wish)
 ```
-Tracker.trackAddToWishlist({
-  product_code: "P123",
-  product_name: "Red T-Shirt",
-  product_price: 19000,
-  product_dc_price: 15000,
-  product_sold_out: false,
-  product_image_url: "https://example.com/red.jpg",
-  brand: "MyBrand",
-  product_first_category: "상의",
-  product_second_category: "반팔",
-  product_third_category: "면"
+Tracker.addToWishlist({
+    product_code: "P123",
+    product_name: "Red T-Shirt",
+    product_price: 19000,
+    product_dc_price: 15000,
+    product_sold_out: false,
+    product_image_url: "https://example.com/red.jpg",
+    product_qty: 2,
+    product_brand: "MyBrand",
+    product_category_1_code: "100",
+    product_category_1_name: "상의",
+    product_category_2_code: "110",
+    product_category_2_name: "반팔",
+    product_category_3_code: "111",
+    product_category_3_name: "면",
+    product_url: "https://example.com/view/P123
 });
 ```
 
 ✅ 결제 완료
 ```
-Tracker.trackPurchaseComplete({
+Tracker.purchaseComplete({
   items: [ ...same as addToCart items... ],
   total_qty: 3,
   total_price: 57000
